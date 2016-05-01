@@ -2,8 +2,10 @@ package com.example.harsh.ceefy;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.support.v7.app.AppCompatActivity;
@@ -51,18 +53,34 @@ public class LoginActivity extends AppCompatActivity {
     CallbackManager callbackManager;
     AccessTokenTracker accessTokenTracker;
     AccessToken accessToken;
+    Button fblogout;
     ProfileTracker profileTracker;
     Profile profile;
-    Button button;
-    private static final String host = "api.linkedin.com";
+    Button button,sms;
+    /*private static final String host = "api.linkedin.com";
     private static final String topCardUrl = "https://" + host + "/v1/people/~:" +
-            "(email-address,formatted-name,phone-numbers,public-profile-url,picture-url,picture-urls::(original))";
+            "(email-address,formatted-name,phone-numbers,public-profile-url,picture-url,picture-urls::(original))";*/
     TextView textView,user_name;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
+        sms=(Button)findViewById(R.id.sms);
+
+        fblogout =(Button)findViewById(R.id.fblogout);
+        fblogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logOut();
+                textView.setText("");
+                loginButton.setVisibility(View.VISIBLE);
+                button.setVisibility(View.VISIBLE);
+                fblogout.setVisibility(View.GONE);
+                sms.setVisibility(View.GONE);
+
+            }
+        });
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
                     "com.example.harsh.ceefy",
@@ -81,7 +99,13 @@ public class LoginActivity extends AppCompatActivity {
         callbackManager = CallbackManager.Factory.create();
 
 
-
+        sms.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent= new Intent(LoginActivity.this,ReadSMS.class);
+                startActivity(intent);
+            }
+        });
         loginButton = (LoginButton) findViewById(R.id.login_button);
         button=(Button) findViewById(R.id.li_login);
         textView=(TextView)findViewById(R.id.text);
@@ -90,26 +114,34 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("click","clicked");
+
                 login_linkedin();
+
             }
         });
+
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loginButton.setReadPermissions("email");
+
+                loginButton.setReadPermissions(Arrays.asList(
+                        "public_profile", "email", "user_birthday", "user_friends"));
+                fblogout.setVisibility(View.VISIBLE);
+                sms.setVisibility(View.VISIBLE);
                 // If using in a fragment
                 //    loginButton.setFragment(this);
                 // Other app specific specialization
 
                 // Callback registration
 
-                loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+               /* loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
                         // App code
                         Log.e("Well","Login successfull");
                         profile = Profile.getCurrentProfile();
                         textView.setText(displayMessage(profile));
+                        textView.append(profile.getLastName().toString());
                     }
 
                     @Override
@@ -121,7 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                     public void onError(FacebookException exception) {
                         // App code
                     }
-                });
+                });*/
                 accessTokenTracker = new AccessTokenTracker() {
                     @Override
                     protected void onCurrentAccessTokenChanged(
@@ -142,26 +174,41 @@ public class LoginActivity extends AppCompatActivity {
                                 Log.e("Well2","Login successfull");
                                 profile = Profile.getCurrentProfile();
                                 textView.setText(displayMessage(profile));
+                                textView.append(" "+profile.getLastName().toString());
+                                textView.append(" "+profile.getId().toString());
+                               // profileTracker.startTracking();
                             }
 
                             @Override
                             public void onCancel() {
+                                profileTracker.stopTracking();
                                 // App code
                             }
 
                             @Override
                             public void onError(FacebookException exception) {
+                                profileTracker.stopTracking();
                                 // App code
                             }
                         });
+
                 profileTracker = new ProfileTracker() {
                     @Override
                     protected void onCurrentProfileChanged(
                             Profile oldProfile,
                             Profile currentProfile) {
                         // App code
+                        /*if(profileTracker.isTracking()==false) {
+                            currentProfile = Profile.getCurrentProfile();
+                            String c = currentProfile.getFirstName();
+                            String b = currentProfile.getLastName();
+                            String a = currentProfile.getId();
+                            textView.setText(" " + c + " " + b + " " + a + " ");
+                        }*/
                     }
                 };
+                loginButton.setVisibility(View.GONE);
+                button.setVisibility(View.GONE);
             }
         });
 
@@ -170,9 +217,22 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.d("resultc",String.valueOf(resultCode));
+        Log.d("reqc",String.valueOf(requestCode));
+        if(requestCode == 3672) {
+            Intent intent = new Intent(LoginActivity.this, UpdateProfile.class);
+            startActivity(intent);
+        }
+        else if(requestCode == 64206){
+           /* Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);*/
+        }
+
         LISessionManager.getInstance(getApplicationContext()).onActivityResult(this, requestCode, resultCode, data);
     }
+
     private String displayMessage(Profile profile) {
         StringBuilder stringBuilder = new StringBuilder();
         if (profile != null) {
@@ -197,7 +257,7 @@ public class LoginActivity extends AppCompatActivity {
                     public void onAuthSuccess() {
 
                         Toast.makeText(getApplicationContext(), "success yooo" , Toast.LENGTH_LONG).show();
-                        //getUserData();
+
                         Log.d("pass","pass");
 
                     }
@@ -211,7 +271,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }, true);
     }
-    public void getUserData(){
+    /*public void getUserData(){
         APIHelper apiHelper = APIHelper.getInstance(getApplicationContext());
         apiHelper.getRequest(this, topCardUrl, new ApiListener() {
             @Override
@@ -242,9 +302,9 @@ public class LoginActivity extends AppCompatActivity {
             user_name.setText(response.get("formattedName").toString());
             Toast.makeText(getApplicationContext(),response.get("formattedName").toString(),Toast.LENGTH_LONG).show();
 
-            /*Picasso.with(this).load(response.getString("pictureUrl"))
+            *//*Picasso.with(this).load(response.getString("pictureUrl"))
                     .into(profile_pic);
-*/
+*//*
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -254,14 +314,15 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-    /*
+    *//*
        Set User Profile Information in Navigation Bar.
-     */
-
+     *//*
+*/
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-       //accessTokenTracker.stopTracking();
+      // accessTokenTracker.stopTracking();
+        profileTracker.stopTracking();
     }
 }

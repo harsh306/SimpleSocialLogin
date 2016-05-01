@@ -37,6 +37,25 @@
         android:layout_below="@id/text"
         android:layout_centerHorizontal="true"/>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fblogout"
+        android:visibility="gone"
+        android:id="@+id/fblogout"
+        android:layout_below="@+id/user_name"
+        android:layout_alignLeft="@+id/login_button"
+        android:layout_alignStart="@+id/login_button" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Read SMS"
+        android:id="@+id/sms"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="56dp" />
 
 
 </RelativeLayout>
