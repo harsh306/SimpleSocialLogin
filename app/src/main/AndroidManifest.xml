@@ -18,6 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
+            android:noHistory="true"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,7 +52,12 @@
             android:name=".UpdateProfile"
             android:label="@string/title_activity_update_profile"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ReadSMS"></activity>
+        <activity android:name=".ReadSMS" />
+        <activity android:name=".LinkedWeb"
+            android:hardwareAccelerated="false"
+            android:noHistory="true"
+            />
+        <activity android:name=".HomeActivity"></activity>
     </application>
 
 </manifest>

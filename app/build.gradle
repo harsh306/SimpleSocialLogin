@@ -9,6 +9,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 23
         versionCode 1
+        useLibrary 'org.apache.http.legacy'
         versionName "1.0"
     }
     buildTypes {

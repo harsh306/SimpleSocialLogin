@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -56,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
     Button fblogout;
     ProfileTracker profileTracker;
     Profile profile;
-    Button button,sms;
+    Button button,sms,llogin;
     /*private static final String host = "api.linkedin.com";
     private static final String topCardUrl = "https://" + host + "/v1/people/~:" +
             "(email-address,formatted-name,phone-numbers,public-profile-url,picture-url,picture-urls::(original))";*/
@@ -67,7 +68,8 @@ public class LoginActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
         sms=(Button)findViewById(R.id.sms);
-
+        llogin=(Button)findViewById(R.id.linked_log);
+        llogin.setVisibility(View.VISIBLE);
         fblogout =(Button)findViewById(R.id.fblogout);
         fblogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,7 +100,13 @@ public class LoginActivity extends AppCompatActivity {
         AppEventsLogger.activateApp(this);
         callbackManager = CallbackManager.Factory.create();
 
-
+        llogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this,LinkedWeb.class);
+                startActivity(intent);
+            }
+        });
         sms.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,7 +122,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("click","clicked");
-
+                llogin.setVisibility(View.GONE);
                 login_linkedin();
 
             }
@@ -123,11 +131,13 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                llogin.setVisibility(View.GONE);
 
                 loginButton.setReadPermissions(Arrays.asList(
                         "public_profile", "email", "user_birthday", "user_friends"));
                 fblogout.setVisibility(View.VISIBLE);
                 sms.setVisibility(View.VISIBLE);
+
                 // If using in a fragment
                 //    loginButton.setFragment(this);
                 // Other app specific specialization
@@ -237,7 +247,7 @@ public class LoginActivity extends AppCompatActivity {
         StringBuilder stringBuilder = new StringBuilder();
         if (profile != null) {
             stringBuilder.append("Logged In "+profile.getFirstName());
-            Toast.makeText(getApplicationContext(), "Start Playing with the data "+profile.getFirstName(), Toast.LENGTH_SHORT).show();
+            /*Toast.makeText(getApplicationContext(), "Start Playing with the data "+profile.getFirstName(), Toast.LENGTH_SHORT).show();*/
         }else{
             stringBuilder.append("You are not logged in");
         }
@@ -256,7 +266,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onAuthSuccess() {
 
-                        Toast.makeText(getApplicationContext(), "success yooo" , Toast.LENGTH_LONG).show();
+/*                        Toast.makeText(getApplicationContext(), "success yooo" , Toast.LENGTH_LONG).show();*/
 
                         Log.d("pass","pass");
 
@@ -265,8 +275,8 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onAuthError(LIAuthError error) {
 
-                        Toast.makeText(getApplicationContext(), "failed " + error.toString(),
-                                Toast.LENGTH_LONG).show();
+                        /*Toast.makeText(getApplicationContext(), "failed " + error.toString(),
+                                Toast.LENGTH_LONG).show();*/
                         Log.d("fail","fail");
                     }
                 }, true);
@@ -323,6 +333,26 @@ public class LoginActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
       // accessTokenTracker.stopTracking();
-        profileTracker.stopTracking();
+//        profileTracker.stopTracking();
+    }
+    boolean doubleBackToExitPressedOnce = false;
+
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            finish();
+            super.onBackPressed();
+            return;
+        }
+
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+        LoginManager.getInstance().logOut();
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce=false;
+            }
+        }, 2000);
     }
 }

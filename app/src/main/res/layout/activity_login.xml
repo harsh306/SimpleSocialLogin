@@ -57,5 +57,15 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="56dp" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LinkedIn Login"
+        android:id="@+id/linked_log"
+        android:layout_below="@+id/user_name"
+        android:layout_alignLeft="@+id/login_button"
+        android:layout_alignStart="@+id/login_button"
+        android:layout_marginTop="52dp" />
+
 
 </RelativeLayout>
