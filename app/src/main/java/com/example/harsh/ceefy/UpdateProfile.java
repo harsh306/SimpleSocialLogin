@@ -3,6 +3,7 @@ package com.example.harsh.ceefy;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -21,6 +22,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+//import com.firebase.security.token.TokenGenerator;
+//import com.firebase.security.token.TokenOptions;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.LISessionManager;
 import com.linkedin.platform.errors.LIApiError;
@@ -29,6 +35,10 @@ import com.linkedin.platform.listeners.ApiResponse;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
+//import com.firebase.security.token.*;
+import java.util.HashMap;
+import java.util.Map;
+//import org.apache.commons.codec.android.binary.Base64;
 
 public class UpdateProfile extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -36,7 +46,10 @@ public class UpdateProfile extends AppCompatActivity
     ImageView profile_pic;
     NavigationView navigation_view;
     Button logout;
+    String profile="";
+    Firebase this_user;
     private static final String host = "api.linkedin.com";
+    private static final String fb_secret="6ABOH4ojdO1h9FDPbLeKmNZyBtNwRRb3Vp75nDf4";
     private static final String topCardUrl = "https://" + host + "/v1/people/~:" +
             "(email-address,formatted-name,phone-numbers,public-profile-url,picture-url,picture-urls::(original))";
     @Override
@@ -47,6 +60,38 @@ public class UpdateProfile extends AppCompatActivity
 
         setSupportActionBar(toolbar);
         Button sms1 = (Button)findViewById(R.id.sms1);
+
+
+
+        TokenOptions tokenOptions = new TokenOptions();
+        tokenOptions.setAdmin(true);
+        Map<String, Object> payload = new HashMap<String, Object>();
+        payload.put("uid", "1");
+        TokenGenerator tokenGenerator = new TokenGenerator(fb_secret);
+        String token = tokenGenerator.createToken(payload,tokenOptions);
+        Log.d("Token",token);
+        Firebase ref = new Firebase("https://cefy.firebaseio.com/");
+        String android_id = Settings.Secure.getString(this.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        this_user = ref.child(android_id);
+        ref.authWithCustomToken(token, new Firebase.AuthResultHandler() {
+            @Override
+            public void onAuthenticationError(FirebaseError error) {
+                System.err.println("Login Failed! " + error.getMessage());
+            }
+
+            @Override
+            public void onAuthenticated(AuthData authData) {
+                Log.d("Login" ,"Succeeded!");
+                Map<String, Object> user_data = new HashMap<String, Object>();
+                user_data.put("email",user_email );
+                user_data.put("profile",profile);
+                user_data.put("Name",user_name);
+                this_user.updateChildren(user_data);
+            }
+        });
+
         getUserData();
         sms1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,6 +129,7 @@ public class UpdateProfile extends AppCompatActivity
                 try {
 
                     setUserProfile(result.getResponseDataAsJson());
+                    profile=result.getResponseDataAsJson().toString();
                     //progress.dismiss();
 
                 } catch (Exception e){
