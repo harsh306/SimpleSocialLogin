@@ -84,10 +84,10 @@ public class UpdateProfile extends AppCompatActivity
             @Override
             public void onAuthenticated(AuthData authData) {
                 Log.d("Login" ,"Succeeded!");
-                Map<String, Object> user_data = new HashMap<String, Object>();
-                user_data.put("email",user_email );
+                Map<String, Object> user_data = new HashMap<>();
+                user_data.put("email",user_email.getText().toString() );
                 user_data.put("profile",profile);
-                user_data.put("Name",user_name);
+                user_data.put("Name",user_name.getText().toString());
                 this_user.updateChildren(user_data);
             }
         });

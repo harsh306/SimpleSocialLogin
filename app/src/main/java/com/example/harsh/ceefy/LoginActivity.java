@@ -160,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
                 llogin.setVisibility(View.GONE);
 
                 loginButton.setReadPermissions(Arrays.asList(
-                        "public_profile", "email", "user_birthday", "user_friends"));
+                        "public_profile", "email", "user_friends"));
                 fblogout.setVisibility(View.VISIBLE);
                 sms.setVisibility(View.VISIBLE);
 
@@ -230,6 +230,7 @@ public class LoginActivity extends AppCompatActivity {
                                 this_user.updateChildren(user_data);
                                // profileTracker.startTracking();*/
                             }
+
 
                             @Override
                             public void onCancel() {

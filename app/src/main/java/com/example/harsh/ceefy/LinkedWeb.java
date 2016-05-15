@@ -75,6 +75,7 @@ public class LinkedWeb extends AppCompatActivity {
         setContentView(R.layout.activity_linked_web);
 
         webView = (WebView)findViewById(R.id.webView);
+        webView.clearCache(true);
         webView.requestFocus(View.FOCUS_DOWN);
         pd = ProgressDialog.show(this, "", "Loading..",true);
         webView.getSettings().setUseWideViewPort(true);
@@ -240,7 +241,7 @@ public class LinkedWeb extends AppCompatActivity {
             }
             if(status){
                 //If everything went Ok, change to another activity.
-                Intent startProfileActivity = new Intent(LinkedWeb.this, HomeActivity.class);
+                Intent startProfileActivity = new Intent(LinkedWeb.this, UpdateProfile.class);
                 LinkedWeb.this.startActivity(startProfileActivity);
             }
         }
