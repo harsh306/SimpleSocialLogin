@@ -38,7 +38,6 @@ public class ReadSMS extends AppCompatActivity   {
         Uri uriSms = Uri.parse("content://sms/inbox");
         Cursor cursor = getContentResolver().query(uriSms, new String[]{"_id", "address", "date", "body"},null,null,null);
 
-        cursor.moveToFirst();
         while  (cursor.moveToNext())
         {
             String address = cursor.getString(1);

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ceefy</string>
     <string name="action_settings">Settings</string>
-    <string name="facebook_app_id">1769849306580537</string>
+    <string name="facebook_app_id">1706204626317412</string>
     <string name="fb_login_protocol_scheme">fb1769849306580537</string>
     <string name="title_activity_update_profile">UpdateProfile</string>
 
