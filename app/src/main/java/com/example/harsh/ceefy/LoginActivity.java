@@ -1,5 +1,6 @@
 package com.example.harsh.ceefy;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +13,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -39,7 +42,6 @@ import com.facebook.login.widget.LoginButton;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.google.gson.Gson;
 import com.linkedin.platform.APIHelper;
 import com.linkedin.platform.LISessionManager;
 import com.linkedin.platform.errors.LIApiError;
@@ -59,18 +61,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 public class LoginActivity extends AppCompatActivity {
+    private static final int MY_INTERNET = 0;
     LoginButton loginButton;
     CallbackManager callbackManager;
     AccessTokenTracker accessTokenTracker;
     AccessToken accessToken;
     Button fblogout;
-    Map<String, Object> user_data;
-    ProfileTracker profileTracker;
-    Profile profile;
     Firebase this_user;
     Firebase myFirebaseRef;
+    ProfileTracker profileTracker;
+    Profile profile;
     Button button,sms,llogin;
     /*private static final String host = "api.linkedin.com";
     private static final String topCardUrl = "https://" + host + "/v1/people/~:" +
@@ -82,19 +85,19 @@ public class LoginActivity extends AppCompatActivity {
         Firebase.setAndroidContext(getApplicationContext());
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
-        sms=(Button)findViewById(R.id.sms);
-        llogin=(Button)findViewById(R.id.linked_log);
-        llogin.setVisibility(View.VISIBLE);
+         myFirebaseRef = new Firebase("https://cefy.firebaseio.com/");
 
 
-        myFirebaseRef = new Firebase("https://cefy.firebaseio.com/");
-       // myFirebaseRef = new Firebase("https://glowing-inferno-4450.firebaseio.com/");
+        //ActivityCompat.requestPermissions(LoginActivity.this, new String[]{Manifest.permission.READ_CALENDAR},MY_INTERNET);
+
+        // myFirebaseRef = new Firebase("https://glowing-inferno-4450.firebaseio.com/");
         String android_id = Settings.Secure.getString(this.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
         this_user = myFirebaseRef.child(android_id);
-
-
+        sms=(Button)findViewById(R.id.sms);
+        llogin=(Button)findViewById(R.id.linked_log);
+        llogin.setVisibility(View.VISIBLE);
         fblogout =(Button)findViewById(R.id.fblogout);
         fblogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -202,7 +205,6 @@ public class LoginActivity extends AppCompatActivity {
                 };
                 // If the access token is available already assign it.
                 accessToken = AccessToken.getCurrentAccessToken();
-
                 CurrentUser();
                 LoginManager.getInstance().registerCallback(callbackManager,
                         new FacebookCallback<LoginResult>() {
@@ -211,24 +213,10 @@ public class LoginActivity extends AppCompatActivity {
                                 // App code
                                 Log.e("Well2","Login successfull");
                                 profile = Profile.getCurrentProfile();
-                                String first_name= displayMessage(profile);
-                                String last_name = profile.getLastName().toString();
-                                String fb_id=profile.getId().toString();
-                                String profilepic = profile.getProfilePictureUri(200,200).toString();
-                                String link_uri=profile.getLinkUri().toString();
-
-                                textView.setText(first_name);
-                                textView.append(" "+last_name);
-                                textView.append(" "+fb_id);
-                                /*Map<String, Object> user_data = new HashMap<String, Object>();
-                                user_data.put("first_name",first_name );
-                                user_data.put("last_name", last_name);
-                                user_data.put("fb_id", fb_id);
-                                user_data.put("profilepic",profilepic);
-                                user_data.put("link_uri",link_uri);
-
-                                this_user.updateChildren(user_data);
-                               // profileTracker.startTracking();*/
+                                textView.setText(displayMessage(profile));
+                                textView.append(" "+profile.getLastName().toString());
+                                textView.append(" "+profile.getId().toString());
+                               // profileTracker.startTracking();
                             }
 
                             @Override
@@ -266,6 +254,24 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.d("resultc",String.valueOf(resultCode));
+        Log.d("reqc",String.valueOf(requestCode));
+        if(requestCode == 3672) {
+            Intent intent = new Intent(LoginActivity.this, UpdateProfile.class);
+            startActivity(intent);
+        }
+        else if(requestCode == 64206){
+           /* Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);*/
+        }
+
+        LISessionManager.getInstance(getApplicationContext()).onActivityResult(this, requestCode, resultCode, data);
+    }
     public List<String> getSMS(){
         List<String> sms = new ArrayList<String>();
         Uri uriSMSURI = Uri.parse("content://sms/inbox");
@@ -279,28 +285,6 @@ public class LoginActivity extends AppCompatActivity {
 
         }
         return sms;
-
-    }
-    public String fetchInbox()
-    {
-        ArrayList sms = new ArrayList();
-
-        Uri uriSms = Uri.parse("content://sms/inbox");
-        Cursor cursor = getContentResolver().query(uriSms, new String[]{"_id", "address", "date", "body"},null,null,null);
-
-        cursor.moveToFirst();
-        while  (cursor.moveToNext())
-        {
-            String address = cursor.getString(1);
-            String body = cursor.getString(3);
-
-            System.out.println("======&gt; Mobile number =&gt; "+address);
-            System.out.println("=====&gt; SMS Text =&gt; "+body);
-
-            sms.add("Address    "+address+" SMS  "+ body);
-        }
-        String json_sms = new Gson().toJson(sms);
-        return json_sms;
 
     }
     private void onFacebookAccessTokenChange(final AccessToken token) {
@@ -333,24 +317,6 @@ public class LoginActivity extends AppCompatActivity {
             myFirebaseRef.unauth();
         }
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-        Log.d("resultc",String.valueOf(resultCode));
-        Log.d("reqc",String.valueOf(requestCode));
-        if(requestCode == 3672) {
-            Intent intent = new Intent(LoginActivity.this, UpdateProfile.class);
-            startActivity(intent);
-        }
-        else if(requestCode == 64206){
-           /* Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);*/
-        }
-
-        LISessionManager.getInstance(getApplicationContext()).onActivityResult(this, requestCode, resultCode, data);
-    }
 
     private String displayMessage(Profile profile) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -368,6 +334,29 @@ public class LoginActivity extends AppCompatActivity {
     private static Scope buildScope() {
         return Scope.build(Scope.R_BASICPROFILE, Scope.R_EMAILADDRESS);
     }
+   /* public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_INTERNET: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }*/
     public void login_linkedin(){
         LISessionManager.getInstance(getApplicationContext()).init(this,
                 buildScope(),new AuthListener() {
@@ -456,7 +445,6 @@ public class LoginActivity extends AppCompatActivity {
         this.doubleBackToExitPressedOnce = true;
         Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
         LoginManager.getInstance().logOut();
-        myFirebaseRef.unauth();
         new Handler().postDelayed(new Runnable() {
 
             @Override
