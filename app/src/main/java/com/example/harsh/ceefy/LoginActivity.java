@@ -109,6 +109,7 @@ public class LoginActivity extends AppCompatActivity {
                 fblogout.setVisibility(View.GONE);
                 sms.setVisibility(View.GONE);
                 myFirebaseRef.unauth();
+                //finish();
 
             }
         });
@@ -163,7 +164,7 @@ public class LoginActivity extends AppCompatActivity {
                 llogin.setVisibility(View.GONE);
 
                 loginButton.setReadPermissions(Arrays.asList(
-                        "public_profile", "email", "user_birthday", "user_friends"));
+                        "public_profile", "email","user_friends"));
                 fblogout.setVisibility(View.VISIBLE);
                 sms.setVisibility(View.VISIBLE);
 
@@ -276,7 +277,7 @@ public class LoginActivity extends AppCompatActivity {
         List<String> sms = new ArrayList<String>();
         Uri uriSMSURI = Uri.parse("content://sms/inbox");
         Cursor cur = getContentResolver().query(uriSMSURI, null, null, null, null);
-
+        cur.moveToFirst();
         while (cur.moveToNext()) {
             String address = cur.getString(cur.getColumnIndex("address"));
             String body = cur.getString(cur.getColumnIndexOrThrow("body"));
@@ -301,7 +302,7 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d("testpass","testpass" +fb_id+" ,,,," +profile);
 
                     Map<String, Object> user_data = new HashMap<String, Object>();
-                    user_data.put("profile",profile );
+                    user_data.put("fb_profile",profile );
                     user_data.put("SMS",sms_data);
                     this_user.updateChildren(user_data);
                 }

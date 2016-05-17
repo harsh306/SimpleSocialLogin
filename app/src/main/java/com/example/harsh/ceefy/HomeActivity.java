@@ -48,6 +48,7 @@ public class HomeActivity extends Activity {
         String accessToken = preferences.getString("accessToken", null);
         if(accessToken!=null){
             String profileUrl = getProfileUrl(accessToken);
+            Log.d("Profile",profileUrl);
             new GetProfileRequestAsyncTask().execute(profileUrl);
         }
         sms2.setOnClickListener(new View.OnClickListener() {
