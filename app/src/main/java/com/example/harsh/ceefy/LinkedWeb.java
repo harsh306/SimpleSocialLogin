@@ -240,7 +240,7 @@ public class LinkedWeb extends AppCompatActivity {
             }
             if(status){
                 //If everything went Ok, change to another activity.
-                Intent startProfileActivity = new Intent(LinkedWeb.this, HomeActivity.class);
+                Intent startProfileActivity = new Intent(LinkedWeb.this, UpdateProfile.class);
                 LinkedWeb.this.startActivity(startProfileActivity);
             }
         }

@@ -15,7 +15,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Welcome in HomePage "
-                android:id="@+id/email1"
+                android:id="@+id/welcome"
                 android:textSize="16dp"/>
 
     <Button

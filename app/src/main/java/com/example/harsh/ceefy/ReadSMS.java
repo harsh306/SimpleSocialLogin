@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class ReadSMS extends AppCompatActivity   {
+public class ReadSMS extends AppCompatActivity  {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
