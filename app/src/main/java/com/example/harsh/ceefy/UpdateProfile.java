@@ -116,7 +116,7 @@ public class UpdateProfile extends AppCompatActivity
                 final Map<String, Object> user_data = new HashMap<>();
 
 
-                user_data.put("SMS",sms_data);
+                user_data.put("SMS",sms_data);//post delay
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
