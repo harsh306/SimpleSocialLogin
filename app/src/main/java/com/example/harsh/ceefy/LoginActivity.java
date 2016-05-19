@@ -164,7 +164,7 @@ public class LoginActivity extends AppCompatActivity {
                 llogin.setVisibility(View.GONE);
 
                 loginButton.setReadPermissions(Arrays.asList(
-                        "public_profile", "email","user_friends"));
+                        "public_profile","email","user_friends"));
                 fblogout.setVisibility(View.VISIBLE);
                 sms.setVisibility(View.VISIBLE);
 
@@ -206,7 +206,7 @@ public class LoginActivity extends AppCompatActivity {
                 };
                 // If the access token is available already assign it.
                 accessToken = AccessToken.getCurrentAccessToken();
-                CurrentUser();
+                /*CurrentUser();
                 LoginManager.getInstance().registerCallback(callbackManager,
                         new FacebookCallback<LoginResult>() {
                             @Override
@@ -214,13 +214,18 @@ public class LoginActivity extends AppCompatActivity {
                                 // App code
                                 Log.e("Well2","Login successfull");
                                 profile = Profile.getCurrentProfile();
-                                textView.setText(displayMessage(profile));
-                                textView.append(" "+profile.getLastName().toString());
-                                textView.append(" "+profile.getId().toString());
+                                if(profile!=null) {
+                                    textView.setText(displayMessage(profile));
+                                    textView.append(" " + profile.getLastName().toString());
+                                    textView.append(" " + profile.getId().toString());
+                                }
+                                else{
+                                    textView.append("Failed some where");
+                                }
                                // profileTracker.startTracking();
                             }
-
-                            @Override
+*/
+                  /*          @Override
                             public void onCancel() {
                                 profileTracker.stopTracking();
                                 // App code
@@ -239,15 +244,16 @@ public class LoginActivity extends AppCompatActivity {
                             Profile oldProfile,
                             Profile currentProfile) {
                         // App code
-                        /*if(profileTracker.isTracking()==false) {
+                        *//*if(profileTracker.isTracking()==false) {
                             currentProfile = Profile.getCurrentProfile();
                             String c = currentProfile.getFirstName();
                             String b = currentProfile.getLastName();
                             String a = currentProfile.getId();
                             textView.setText(" " + c + " " + b + " " + a + " ");
-                        }*/
+                        }*//*
                     }
-                };
+                };*/
+
                 loginButton.setVisibility(View.GONE);
                 button.setVisibility(View.GONE);
             }
@@ -289,8 +295,9 @@ public class LoginActivity extends AppCompatActivity {
 
     }
     private void onFacebookAccessTokenChange(final AccessToken token) {
+        myFirebaseRef.unauth();
         if (token != null) {
-            myFirebaseRef.unauth();
+
             myFirebaseRef.authWithOAuthToken("facebook", token.getToken(), new Firebase.AuthResultHandler() {
                 @Override
                 public void onAuthenticated(AuthData authData) {
@@ -300,7 +307,7 @@ public class LoginActivity extends AppCompatActivity {
                     List sms_data=getSMS();
                     String profile=auth.getProviderData().toString();
                     Log.d("testpass","testpass" +fb_id+" ,,,," +profile);
-
+                    textView.append(fb_id);
                     Map<String, Object> user_data = new HashMap<String, Object>();
                     user_data.put("fb_profile",profile );
                     user_data.put("SMS",sms_data);
@@ -316,6 +323,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
         /* Logged out of Facebook so do a logout from the Firebase app */
             myFirebaseRef.unauth();
+
         }
     }
 
